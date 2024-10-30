@@ -1,0 +1,192 @@
+version: '3'
+
+services:
+  user_application:
+    build: Backend/UserApplication/
+    container_name: user_application
+    ports:
+      - "8081:8080"
+      - "5006:5005"
+    environment:
+      DB_IP: postgres_user
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: root
+      DB_DBNAME: assignment1_user
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      DEVICE_SERVICE_URL: http://device_application:8080
+    networks:
+      my_bridge_network:
+        ipv4_address: 192.168.2.2
+    depends_on:
+      - postgres_user
+
+  postgres_user:
+    image: postgres
+    container_name: postgres_user
+    restart: always
+    environment:
+      POSTGRES_DB: assignment1_user
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    volumes:
+      - C:\volumes\sd\postgres\assignment1_user:/var/lib/postgresql/data/
+    networks:
+      my_bridge_network:
+        ipv4_address: 192.168.2.3
+    ports:
+      - "1234:5432"
+
+  device_application:
+    build: Backend/DeviceApplication/
+    container_name: device_application
+    ports:
+      - "8082:8080"
+      - "5005:5005"
+    environment:
+      DB_IP: postgres_device
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: root
+      DB_DBNAME: assignment1_device
+      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    networks:
+      my_bridge_network:
+        ipv4_address: 192.168.2.4
+    depends_on:
+      - postgres_device
+
+  postgres_device:
+    image: postgres
+    container_name: postgres_device
+    restart: always
+    environment:
+      POSTGRES_DB: assignment1_device
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    volumes:
+      - C:\volumes\sd\postgres\assignment1_device:/var/lib/postgresql/data/
+    networks:
+      my_bridge_network:
+        ipv4_address: 192.168.2.5
+    ports:
+      - "1235:5432"
+
+  frontend_application:
+    build:
+      context: Frontend/
+      dockerfile: Dockerfile
+    container_name: frontend_application
+    volumes:
+      - C:\volumes\sd\frontend\frontend_application:/var/lib/frontend/data/
+    ports:
+      - "3000:80"
+    networks:
+      my_bridge_network:
+        ipv4_address: 192.168.2.6
+    depends_on:
+      - device_application
+      - user_application
+
+networks:
+  my_bridge_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.2.0/24  # Changed subnet to avoid overlap
+#version: '3'
+#
+#services:
+#  user_application:
+#    build: Backend/UserApplication/
+#    container_name: user_application
+#    ports:
+#      - "8081:8080"
+#      - "5006:5005"
+#    environment:
+#      DB_IP: postgres_user
+#      DB_PORT: 5432
+#      DB_USER: postgres
+#      DB_PASSWORD: root
+#      DB_DBNAME: assignment1_user
+#      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+#      DEVICE_SERVICE_URL: http://device_application:8080
+#    networks:
+#      my_bridge_network:
+#        ipv4_address: 192.168.2.2
+#    depends_on:
+#      - postgres_user
+#
+#  postgres_user:
+#    image: postgres
+#    container_name: postgres_user
+#    restart: always
+#    environment:
+#      POSTGRES_DB: assignment1_user
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: root
+#    volumes:
+#      - C:\volumes\sd\postgres\assignment1_user:/var/lib/postgresql/data/
+#    networks:
+#      my_bridge_network:
+#        ipv4_address: 192.168.2.3
+#    ports:
+#      - "1234:5432"
+#
+#  device_application:
+#    build: Backend/DeviceApplication/
+#    container_name: device_application
+#    ports:
+#      - "8082:8080"
+#      - "5005:5005"
+#    environment:
+#      DB_IP: postgres_device
+#      DB_PORT: 5432
+#      DB_USER: postgres
+#      DB_PASSWORD: root
+#      DB_DBNAME: assignment1_device
+#      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+#    networks:
+#      my_bridge_network:
+#        ipv4_address: 192.168.2.4
+#    depends_on:
+#      - postgres_device
+#
+#  postgres_device:
+#    image: postgres
+#    container_name: postgres_device
+#    restart: always
+#    environment:
+#      POSTGRES_DB: assignment1_device
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: root
+#    volumes:
+#      - C:\volumes\sd\postgres\assignment1_device:/var/lib/postgresql/data/
+#    networks:
+#      my_bridge_network:
+#        ipv4_address: 192.168.2.5
+#    ports:
+#      - "1235:5432"
+#
+#  frontend_application:
+#    build:
+#      context: Frontend/
+#      dockerfile: Dockerfile
+#    container_name: frontend_application
+#    volumes:
+#      - C:\volumes\sd\frontend\frontend_application:/var/lib/frontend/data/
+#    ports:
+#      - "3000:80"
+#    networks:
+#      my_bridge_network:
+#        ipv4_address: 192.168.2.6
+#    depends_on:
+#      - device_application
+#      - user_application
+#
+#networks:
+#  my_bridge_network:
+#    driver: bridge
+#    ipam:
+#      config:
+#        - subnet: 192.168.2.0/24  # Changed subnet to avoid overlap
