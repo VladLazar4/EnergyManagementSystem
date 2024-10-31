@@ -1,0 +1,4 @@
+#!/bin/sh
+# Use envsubst to substitute ${BACKEND} and ${BACKEND2}
+envsubst '${BACKEND} ${BACKEND2}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+exec "$@"

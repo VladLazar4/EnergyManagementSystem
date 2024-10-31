@@ -1,4 +1,4 @@
-import {HOST} from "../../commons/hosts.js";
+import {HOST_DEVICE} from "../../commons/hosts.js";
 import RestApiClient from "../../commons/api/rest-client";
 
 
@@ -9,7 +9,7 @@ const endpoint = {
 };
 
 function getDevices(callback) {
-    let request = new Request(HOST.backend_api_devices + endpoint.device, {
+    let request = new Request(HOST_DEVICE.backend_api + endpoint.device, {
         method: 'GET',
     });
 
@@ -17,7 +17,7 @@ function getDevices(callback) {
 }
 
 function getDeviceById(params, callback){
-    let request = new Request(HOST.backend_api_devices + endpoint.device + params.id, {
+    let request = new Request(HOST_DEVICE.backend_api + endpoint.device + params.id, {
         method: 'GET'
     });
 
@@ -27,7 +27,7 @@ function getDeviceById(params, callback){
 
 function postDevice(device, callback){
     console.log(device);
-    let request = new Request(HOST.backend_api_devices + endpoint.device, {
+    let request = new Request(HOST_DEVICE.backend_api + endpoint.device, {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -40,7 +40,7 @@ function postDevice(device, callback){
 }
 
 function updateDevice(deviceId, deviceData, callback){
-    let request = new Request(HOST.backend_api_devices + endpoint.device + '/' + deviceId, {
+    let request = new Request(HOST_DEVICE.backend_api + endpoint.device + '/' + deviceId, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ function updateDevice(deviceId, deviceData, callback){
 }
 
 function deleteDevice(deviceId, callback){
-    const endpointUrl = `${HOST.backend_api_devices}${endpoint.device}/${deviceId}`;
+    const endpointUrl = `${HOST_DEVICE.backend_api}${endpoint.device}/${deviceId}`;
 
     let request = new Request(endpointUrl, {
         method: 'DELETE',
@@ -66,7 +66,7 @@ function deleteDevice(deviceId, callback){
 }
 
 function getUsers(callback) {
-    let request = new Request(HOST.backend_api_devices + endpoint.device + "/getUsers", {
+    let request = new Request(HOST_DEVICE.backend_api + endpoint.device + "/getUsers", {
         method: 'GET',
     });
     console.log(request.url);

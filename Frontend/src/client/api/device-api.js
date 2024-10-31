@@ -1,4 +1,4 @@
-import {HOST} from "../../commons/hosts.js";
+import {HOST_DEVICE} from "../../commons/hosts.js";
 import RestApiClient from "../../commons/api/rest-client";
 
 
@@ -9,7 +9,7 @@ const endpoint = {
 
 function getDeviceById(params, callback){
     const ownerId = params.ownerId;
-    let request = new Request(`${HOST.backend_api_devices}${endpoint.device}/${ownerId}`, {
+    let request = new Request(`${HOST_DEVICE.backend_api}${endpoint.device}/${ownerId}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -21,7 +21,7 @@ function getDeviceById(params, callback){
 }
 
 function postDevice(user, callback){
-    let request = new Request(HOST.backend_api_devices + endpoint.device , {
+    let request = new Request(HOST_DEVICE.backend_api + endpoint.device , {
         method: 'POST',
         headers : {
             'Accept': 'application/json',

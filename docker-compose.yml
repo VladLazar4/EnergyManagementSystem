@@ -1,9 +1,9 @@
 version: '3'
 
 services:
-  user_application:
+  userapplication:
     build: Backend/UserApplication/
-    container_name: user_application
+    container_name: userapplication
     ports:
       - "8081:8080"
       - "5006:5005"
@@ -14,7 +14,7 @@ services:
       DB_PASSWORD: root
       DB_DBNAME: assignment1_user
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-      DEVICE_SERVICE_URL: http://device_application:8080
+      DEVICE_SERVICE_URL: http://deviceapplication:8080
     networks:
       my_bridge_network:
         ipv4_address: 192.168.2.2
@@ -37,9 +37,9 @@ services:
     ports:
       - "1234:5432"
 
-  device_application:
+  deviceapplication:
     build: Backend/DeviceApplication/
-    container_name: device_application
+    container_name: deviceapplication
     ports:
       - "8082:8080"
       - "5005:5005"
@@ -72,21 +72,24 @@ services:
     ports:
       - "1235:5432"
 
-  frontend_application:
+  frontendapplication:
     build:
       context: Frontend/
       dockerfile: Dockerfile
-    container_name: frontend_application
+    container_name: frontendapplication
     volumes:
-      - C:\volumes\sd\frontend\frontend_application:/var/lib/frontend/data/
+      - C:\volumes\sd\frontend\frontendapplication:/var/lib/frontend/data/
     ports:
       - "3000:80"
     networks:
       my_bridge_network:
         ipv4_address: 192.168.2.6
     depends_on:
-      - device_application
-      - user_application
+      - deviceapplication
+      - userapplication
+    environment:
+      BACKEND: userapplication
+      BACKEND2: deviceapplication
 
 networks:
   my_bridge_network:
