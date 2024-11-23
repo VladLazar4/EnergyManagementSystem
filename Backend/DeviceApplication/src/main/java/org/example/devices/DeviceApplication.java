@@ -10,7 +10,6 @@ import java.util.TimeZone;
 
 @SpringBootApplication
 @Validated
-
 public class DeviceApplication extends SpringBootServletInitializer {
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
@@ -21,13 +20,4 @@ public class DeviceApplication extends SpringBootServletInitializer {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 		SpringApplication.run(DeviceApplication.class, args);
 	}
-
-//	@Bean
-//	public Docket api() {
-//		return new Docket(DocumentationType.SWAGGER_2)
-//				.select()
-//				.apis(RequestHandlerSelectors.any())
-//				.paths(PathSelectors.any())
-//				.build();
-//	}
 }
