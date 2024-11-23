@@ -1,7 +1,6 @@
 package org.example.devices.services;
 
 import jakarta.persistence.Table;
-import org.example.devices.dtos.DeviceDTO;
 import org.example.devices.dtos.UserDTO;
 import org.example.devices.dtos.builders.UserBuilder;
 import org.example.devices.entities.Device;
@@ -40,11 +39,9 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-//    @Transactional
     public UUID insert(UserDTO userDTO) {
         User user = UserBuilder.toEntity(userDTO);
         user = userRepository.save(user);
-//        userDTO.setId(user.getId());
         LOGGER.debug("User with id {} was inserted in db", userDTO.getName());
         return user.getId();
     }
@@ -68,13 +65,10 @@ public class UserService {
 
     public void delete(UUID id) {
         userRepository.deleteById(id);
-//        List<Device> devices = deviceRepository.findAll();
         List<Device> devicesToDelete = new ArrayList<>();
         devicesToDelete = deviceRepository.findAllDeviceByOwnerId(id);
 
         deviceRepository.deleteAll(devicesToDelete);
-//        System.out.println(deviceRepository.findAllDeviceByOwnerId(id));
-////        deviceRepository.deleteAllByOwnerId(id);
     }
 
 }

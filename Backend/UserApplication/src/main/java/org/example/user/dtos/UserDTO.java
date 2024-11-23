@@ -1,7 +1,6 @@
 package org.example.user.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 //import lombok.Builder;
 //import lombok.Data;
 import org.example.user.entities.Roles;

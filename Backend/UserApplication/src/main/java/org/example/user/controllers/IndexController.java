@@ -13,6 +13,6 @@ public class IndexController {
 
     @GetMapping(value = "/")
     public ResponseEntity<String> getStatus() {
-        return new ResponseEntity<>("City APP Service is running...", HttpStatus.OK);
+        return new ResponseEntity<>("User APP Service is running...", HttpStatus.OK);
     }
 }

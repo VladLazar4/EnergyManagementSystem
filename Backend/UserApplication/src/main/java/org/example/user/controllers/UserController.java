@@ -7,20 +7,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.user.dtos.UserDTO;
-import org.example.user.entities.User;
 import org.example.user.services.UserService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-//import reactor.core.publisher.Mono;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import javax.validation.Valid;
 import java.util.*;
 
@@ -133,13 +128,5 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
-
-//    public String decryptPassword(String encryptedPassword, String secretKey) throws Exception {
-//        SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(), "AES");
-//        Cipher cipher = Cipher.getInstance("AES");
-//        cipher.init(Cipher.DECRYPT_MODE, keySpec);
-//        byte[] decodedBytes = Base64.getDecoder().decode(encryptedPassword);
-//        return new String(cipher.doFinal(decodedBytes));
-//    }
 }
 

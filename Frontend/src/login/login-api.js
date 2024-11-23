@@ -23,6 +23,9 @@ function loginUser(params, callback){
         },
         body: requestBody
     });
+    console.log("URL: " + request.url);
+    console.log("hashedPassword: " + hashedPassword);
+    console.log("requestBody: " + JSON.stringify(requestBody));
 
     RestApiClient.performRequest(request, callback);
 

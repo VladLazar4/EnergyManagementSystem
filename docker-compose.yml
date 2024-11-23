@@ -1,109 +1,176 @@
-version: '3'
+#docker-compose up -d --build
+version: '3.8'
 
 services:
   userapplication:
     build: Backend/UserApplication/
-    container_name: userapplication
-    ports:
-      - "8081:8080"
-      - "5006:5005"
-    environment:
-      DB_IP: postgres_user
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: root
-      DB_DBNAME: assignment1_user
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
-      DEVICE_SERVICE_URL: http://deviceapplication:8080
+    deploy:
+      replicas: 2
     networks:
-      my_bridge_network:
-        ipv4_address: 192.168.2.2
+      - shared-network
     depends_on:
       - postgres_user
-
-  postgres_user:
-    image: postgres
-    container_name: postgres_user
-    restart: always
-    environment:
-      POSTGRES_DB: assignment1_user
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-    volumes:
-      - C:\volumes\sd\postgres\assignment1_user:/var/lib/postgresql/data/
-    networks:
-      my_bridge_network:
-        ipv4_address: 192.168.2.3
-    ports:
-      - "1234:5432"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.userapplication.rule=Host(`userapplication.localhost`)  || PathPrefix(`/userapplication`)"
+      - "traefik.http.middlewares.userapplication-strip.stripprefix.prefixes=/userapplication"
+      - "traefik.http.routers.userapplication.middlewares=userapplication-strip "
+      - "traefik.http.routers.userapplication.service=userapplication"
+      - "traefik.http.services.userapplication.loadbalancer.server.port=8080"
 
   deviceapplication:
     build: Backend/DeviceApplication/
-    container_name: deviceapplication
-    ports:
-      - "8082:8080"
-      - "5005:5005"
-    environment:
-      DB_IP: postgres_device
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: root
-      DB_DBNAME: assignment1_device
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    deploy:
+      replicas: 2
     networks:
-      my_bridge_network:
-        ipv4_address: 192.168.2.4
+      - shared-network
     depends_on:
       - postgres_device
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.deviceapplication.rule=Host(`deviceapplication.localhost`) || PathPrefix(`/deviceapplication`)"
+      - "traefik.http.middlewares.deviceapplication-strip.stripprefix.prefixes=/deviceapplication"
+      - "traefik.http.routers.deviceapplication.middlewares=deviceapplication-strip "
+      - "traefik.http.routers.deviceapplication.service=deviceapplication"
+      - "traefik.http.services.deviceapplication.loadbalancer.server.port=8080"
+
+  measurementapplication:
+    build: Backend/MeasurementApplication/
+    deploy:
+      replicas: 1
+    networks:
+      - shared-network
+    depends_on:
+      - postgres_measurement
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.measurementapplication.rule=Host(`measurementapplication.localhost`) || PathPrefix(`/measurementapplication`)"
+      - "traefik.http.middlewares.measurementapplication-strip.stripprefix.prefixes=/measurementapplication"
+      - "traefik.http.routers.measurementapplication.middlewares=measurementapplication-strip "
+      - "traefik.http.routers.measurementapplication.service=measurementapplication"
+      - "traefik.http.services.measurementapplication.loadbalancer.server.port=8080"
+
+
+
+
+
+  postgres_user:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: assignment2_user
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    networks:
+      - shared-network
+    volumes:
+      - C:\volumes\sd\postgres\assignment2_user:/var/lib/postgresql/data/
+    ports:
+      - "1234:5432"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.postgres_user.rule=Host(`postgres_user.localhost`) || PathPrefix(`/postgres_user`)"
+      - "traefik.http.middlewares.postgres_user-strip.stripprefix.prefixes=/postgres_user"
+      - "traefik.http.routers.postgres_user.middlewares=postgres_user-strip "
+      - "traefik.http.routers.postgres_user.service=postgres_user"
+      - "traefik.http.services.postgres_user.loadbalancer.server.port=8080"
 
   postgres_device:
     image: postgres
-    container_name: postgres_device
     restart: always
     environment:
-      POSTGRES_DB: assignment1_device
+      POSTGRES_DB: assignment2_device
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
-    volumes:
-      - C:\volumes\sd\postgres\assignment1_device:/var/lib/postgresql/data/
     networks:
-      my_bridge_network:
-        ipv4_address: 192.168.2.5
+      - shared-network
+    volumes:
+      - C:\volumes\sd\postgres\assignment2_device:/var/lib/postgresql/data/
     ports:
       - "1235:5432"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.postgres_device.rule=Host(`postgres_device.localhost`) || PathPrefix(`/postgres_device`)"
+      - "traefik.http.middlewares.postgres_device-strip.stripprefix.prefixes=/postgres_device"
+      - "traefik.http.routers.postgres_device.middlewares=postgres_device-strip "
+      - "traefik.http.routers.postgres_device.service=postgres_device"
+      - "traefik.http.services.postgres_device.loadbalancer.server.port=8080"
+
+
+  postgres_measurement:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: assignment2_measurement
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    networks:
+      - shared-network
+    volumes:
+      - C:\volumes\sd\postgres\assignment2_measurement:/var/lib/postgresql/data/
+    ports:
+      - "1236:5432"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.postgres_measurement.rule=Host(`postgres_measurement.localhost`) || PathPrefix(`/postgres_measurement`)"
+      - "traefik.http.middlewares.postgres_measurement-strip.stripprefix.prefixes=/postgres_measurement"
+      - "traefik.http.routers.postgres_measurement.middlewares=postgres_measurement-strip "
+      - "traefik.http.routers.postgres_measurement.service=postgres_measurement"
+      - "traefik.http.services.postgres_measurement.loadbalancer.server.port=8080"
+
+
+
 
   frontendapplication:
     build:
       context: Frontend/
-      dockerfile: Dockerfile
-    container_name: frontendapplication
+      args:
+        USER_ENV: http://userapplication.localhost
+        DEVICE_ENV: http://deviceapplication.localhost
+        MEASUREMENT_ENV: http://measurementapplication.localhost
     volumes:
       - C:\volumes\sd\frontend\frontendapplication:/var/lib/frontend/data/
-    ports:
-      - "3000:80"
     networks:
-      my_bridge_network:
-        ipv4_address: 192.168.2.6
-    depends_on:
-      - deviceapplication
-      - userapplication
-    environment:
-      BACKEND: userapplication
-      BACKEND2: deviceapplication
+      - shared-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontendapplication.rule=Host(`frontendapplication.localhost`)"
+      - "traefik.http.services.frontendapplication.loadbalancer.server.port=8080"
+
+
 
   rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq_container
+    image: "rabbitmq"
     ports:
-      - "5672:5672"  # Port for RabbitMQ communication
-      - "15672:15672" # Port for RabbitMQ management UI
+      - "5672:5672" 
+      - "15672:15672" 
+    networks:
+      - shared-network
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+  
+
+
+  reverse-proxy:
+    image: traefik:v3.2
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --accesslog=true
+      - --accesslog.filepath=/var/log/traefik/access.log
+      - --log.level=DEBUG
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - shared-network   
+
+
 
 networks:
-  my_bridge_network:
+  shared-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.2.0/24
