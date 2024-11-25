@@ -34,3 +34,16 @@ code {
 .close-button {
   margin-top: 10px;
 }
+
+.chart-container {
+  width: 80%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+
