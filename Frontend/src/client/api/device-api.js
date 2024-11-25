@@ -1,8 +1,6 @@
 import {HOST_DEVICE} from "../../commons/hosts.js";
 import RestApiClient from "../../commons/api/rest-client";
 
-
-
 const endpoint = {
     device: '/device'
 };

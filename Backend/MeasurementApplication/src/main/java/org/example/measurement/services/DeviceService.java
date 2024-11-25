@@ -1,24 +1,24 @@
-package org.example.devices.services;
+package org.example.measurement.services;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Table;
-import org.example.devices.configurations.RabbitMQConfig;
-import org.example.devices.dtos.DeviceDTO;
-import org.example.devices.dtos.MessageDTO;
-import org.example.devices.dtos.builders.DeviceBuilder;
-import org.example.devices.dtos.builders.UserBuilder;
-import org.example.devices.entities.Device;
-import org.example.devices.repositories.DeviceRepository;
+import org.example.measurement.dtos.DeviceDTO;
+import org.example.measurement.dtos.MeasurementDTO;
+import org.example.measurement.dtos.MessageDTO;
+import org.example.measurement.dtos.builders.DeviceBuilder;
+import org.example.measurement.entities.Device;
+import org.example.measurement.repositories.DeviceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 @Service
 @Table(name = "devices")
@@ -27,36 +27,42 @@ public class DeviceService {
     private final DeviceRepository deviceRepository;
 
     @Autowired
-    private RabbitTemplate rabbitTemplate;
-
-    @Autowired
     public DeviceService(DeviceRepository deviceRepository) {
         this.deviceRepository = deviceRepository;
     }
 
-    public List<DeviceDTO> findDevices() {
-        List<Device> deviceList = deviceRepository.findAll();
-        return deviceList.stream()
-                .map(DeviceBuilder::toDeviceDTO)
-                .collect(Collectors.toList());
-    }
+    @RabbitListener(queues = "devices")
+    public void receiveMessage(Map<String, Object> payload) {
+        ObjectMapper objectMapper = new ObjectMapper(); // Use Jackson ObjectMapper
 
-    public List<DeviceDTO> findDeviceByOwnerId(UUID id) {
-        List<Device> deviceList = deviceRepository.findAllDeviceByOwnerId(id);
-        return deviceList.stream()
-                .map(DeviceBuilder::toDeviceDTO)
-                .collect(Collectors.toList());
+        try {
+            String operation = payload.get("operation").toString();
+            // Convert "message" field to DeviceDTO
+            DeviceDTO deviceDTO = objectMapper.convertValue(payload.get("message"), DeviceDTO.class);
+
+            switch (operation) {
+                case "insert":
+                    insert(deviceDTO);
+                    break;
+                case "update":
+                    update(deviceDTO.getId(), deviceDTO);
+                    break;
+                case "delete":
+                    delete(deviceDTO.getId());
+                    break;
+            }
+        } catch (Exception e) {
+            System.out.println("Error processing message: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
 
     public UUID insert(DeviceDTO deviceDTO) {
         Device device = DeviceBuilder.toEntity(deviceDTO);
-        System.out.println(device.getOwnerId());
+
         device = deviceRepository.save(device);
         LOGGER.debug("Device with id {} was inserted in db", device.getName());
-
-        deviceDTO.setId(device.getId());
-        sendMessage(deviceDTO, "insert");
 
         return device.getId();
     }
@@ -77,9 +83,6 @@ public class DeviceService {
         device.setOwnerId(deviceDTO.getOwnerId());
 
         deviceRepository.save(device);
-
-        deviceDTO.setId(id);
-        sendMessage(deviceDTO, "update");
     }
 
     public void delete(UUID id) {
@@ -92,18 +95,5 @@ public class DeviceService {
         Device device = deviceOptional.get();
 
         deviceRepository.delete(device);
-
-        sendMessage(DeviceBuilder.toDeviceDTO(device), "delete");
-    }
-
-
-
-
-    public void sendMessage(DeviceDTO deviceDTO, String operation) {
-        MessageDTO messageDTO = new MessageDTO(operation, deviceDTO);
-
-        rabbitTemplate.convertAndSend(RabbitMQConfig.QUEUE_NAME, messageDTO);
-//        rabbitTemplate.convertAndSend("exchangeName", "routingKey", messageDTO);
-        System.out.println("Message sent to the queue: " + messageDTO);
     }
 }

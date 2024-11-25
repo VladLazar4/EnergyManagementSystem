@@ -15,7 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @Service
@@ -36,7 +38,7 @@ public class MeasurementService {
     }
 
     @RabbitListener(queues = "measurement")
-    public void receiveMessage(String message) throws JsonProcessingException {
+    public void receiveMessage(String message){
         System.out.println(" [x] Received '" + message + "'");
 
         noReadings++;
@@ -74,12 +76,20 @@ public class MeasurementService {
         }
     }
 
-
-    public UUID insert(MeasurementDTO measurementDTO) throws JsonProcessingException {
+    public UUID insert(MeasurementDTO measurementDTO) {
         Measurement measurement = MeasurementBuilder.toEntity(measurementDTO);
 
         measurement = measurementRepository.save(measurement);
         LOGGER.debug("Measurement with id {} was inserted in db", measurement.getId());
         return measurement.getId();
+    }
+
+    public List<MeasurementDTO> findMeasurementsByDeviceId(UUID deviceId) {
+        System.out.println(deviceId);
+        List<Measurement> measurementList = measurementRepository.findAllMeasurementByDeviceId(deviceId);
+        System.out.println(measurementList);
+        return measurementList.stream()
+                .map(MeasurementBuilder::toMeasurementDTO)
+                .collect(Collectors.toList());
     }
 }
