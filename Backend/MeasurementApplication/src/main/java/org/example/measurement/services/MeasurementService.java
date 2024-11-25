@@ -1,9 +1,16 @@
 package org.example.measurement.services;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.rabbitmq.client.MessageProperties;
 import jakarta.persistence.Table;
+import org.apache.logging.log4j.message.Message;
+import org.example.measurement.confuguration.RabbitMQConfig;
+import org.example.measurement.dtos.DeviceDTO;
 import org.example.measurement.dtos.MeasurementDTO;
+import org.example.measurement.dtos.MessageDTO;
 import org.example.measurement.dtos.builders.MeasurementBuilder;
 import org.example.measurement.entities.Measurement;
 import org.example.measurement.repositories.MeasurementRepository;
@@ -11,11 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,9 +35,7 @@ public class MeasurementService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MeasurementService.class);
     private final MeasurementRepository measurementRepository;
     private int noReadings;
-    private UUID deviceId;
     private float measurementValueCurrentHour;
-    private Timestamp timestamp;
 
     @Autowired
     public MeasurementService(MeasurementRepository measurementRepository) {
@@ -37,25 +44,18 @@ public class MeasurementService {
         this.measurementValueCurrentHour = 0;
     }
 
-    @RabbitListener(queues = "measurement")
-    public void receiveMessage(String message){
-        System.out.println(" [x] Received '" + message + "'");
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_NAME_MEASUREMENT)
+    public void receiveMessage(Map<String, Object> payload) {
+
+        System.out.println(payload);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        Timestamp timestamp = objectMapper.convertValue(payload.get("timestamp"), Timestamp.class);
+        UUID deviceId = objectMapper.convertValue(payload.get("deviceId"), UUID.class);
+        Double measurementValue = (Double) payload.get("measurementValue");
 
         noReadings++;
-
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            MeasurementDTO measurementDTO = objectMapper.readValue(message, MeasurementDTO.class);
-
-            deviceId = measurementDTO.getDeviceId();
-            measurementValueCurrentHour += measurementDTO.getMeasurementValue();
-            timestamp = measurementDTO.getTimestamp();
-
-            Thread.sleep(3000);
-        } catch (Exception e) {
-            System.out.println("Error processing message: " + e.getMessage());
-            e.printStackTrace();
-        }
+        measurementValueCurrentHour += measurementValue;
 
         try {
             if (noReadings == 6) {
@@ -63,18 +63,19 @@ public class MeasurementService {
                 measurementDTO.setDeviceId(deviceId);
                 measurementDTO.setMeasurementValue(measurementValueCurrentHour);
                 measurementDTO.setTimestamp(timestamp);
+
                 UUID insertedId = insert(measurementDTO);
                 System.out.println("Inserted ID: " + insertedId);
 
                 measurementValueCurrentHour = 0;
                 noReadings = 0;
             }
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             System.out.println("Error processing message: " + e.getMessage());
             e.printStackTrace();
         }
     }
+
 
     public UUID insert(MeasurementDTO measurementDTO) {
         Measurement measurement = MeasurementBuilder.toEntity(measurementDTO);

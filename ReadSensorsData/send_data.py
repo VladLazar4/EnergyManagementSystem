@@ -38,4 +38,8 @@ for i in range(1, n):
     timestamp = timestamp + 10 * 60 * 1000
 
     channel.basic_publish(exchange='', routing_key=queue_name, body=json.dumps(data))
+    print("Sent data to RabbitMQ.")
+    print(data)
+
+    time.sleep(1)
 connection.close()
