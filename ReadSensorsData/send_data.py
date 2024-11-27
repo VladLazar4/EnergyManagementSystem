@@ -41,5 +41,5 @@ for i in range(1, n):
     print("Sent data to RabbitMQ.")
     print(data)
 
-    time.sleep(1)
+    time.sleep(5)
 connection.close()

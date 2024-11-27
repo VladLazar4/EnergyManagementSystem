@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 //import reactor.core.publisher.Mono;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @CrossOrigin
-@RequestMapping()
+@RequestMapping("/measurement")
 @Tag(name = "Measurement Controller", description = "API for managing measurements")
 public class MeasurementController {
     private final MeasurementService measurementService;
@@ -39,10 +40,14 @@ public class MeasurementController {
             @ApiResponse(responseCode = "200", description = "Measurements found"),
             @ApiResponse(responseCode = "404", description = "Measurements not found for given deviceId")
     })
-    @GetMapping("/{deviceId}")
-    public ResponseEntity<List<MeasurementDTO>> getMeasurementsByDeviceId(@PathVariable UUID deviceId) {
-        List<MeasurementDTO> dtos = measurementService.findMeasurementsByDeviceId(deviceId);
+    @GetMapping("/{deviceId}/{selectedDateString}")
+    public ResponseEntity<List<MeasurementDTO>> getMeasurementsByDeviceIdInDate(
+            @PathVariable UUID deviceId,
+            @PathVariable String selectedDateString
+    ) {
+        List<MeasurementDTO> dtos = measurementService.findMeasurementsByDeviceIdInDate(deviceId, selectedDateString);
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
+
 }
 
