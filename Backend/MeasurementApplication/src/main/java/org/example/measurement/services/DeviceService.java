@@ -3,6 +3,7 @@ package org.example.measurement.services;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Table;
+import org.example.measurement.confuguration.RabbitMQConfig;
 import org.example.measurement.dtos.DeviceDTO;
 import org.example.measurement.dtos.MeasurementDTO;
 import org.example.measurement.dtos.MessageDTO;
@@ -31,13 +32,11 @@ public class DeviceService {
         this.deviceRepository = deviceRepository;
     }
 
-    @RabbitListener(queues = "devices")
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_NAME_DEVICE)
     public void receiveMessage(Map<String, Object> payload) {
-        ObjectMapper objectMapper = new ObjectMapper(); // Use Jackson ObjectMapper
-
         try {
+            ObjectMapper objectMapper = new ObjectMapper();
             String operation = payload.get("operation").toString();
-            // Convert "message" field to DeviceDTO
             DeviceDTO deviceDTO = objectMapper.convertValue(payload.get("message"), DeviceDTO.class);
 
             switch (operation) {

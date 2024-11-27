@@ -1,11 +1,13 @@
 package org.example.measurement.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Table;
+import org.example.measurement.confuguration.RabbitMQConfig;
+import org.example.measurement.confuguration.WebSocketController;
 import org.example.measurement.dtos.MeasurementDTO;
 import org.example.measurement.dtos.builders.MeasurementBuilder;
 import org.example.measurement.entities.Measurement;
+import org.example.measurement.repositories.DeviceRepository;
 import org.example.measurement.repositories.MeasurementRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +17,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Service
@@ -25,56 +31,52 @@ import java.util.stream.Collectors;
 public class MeasurementService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MeasurementService.class);
     private final MeasurementRepository measurementRepository;
-    private int noReadings;
-    private UUID deviceId;
-    private float measurementValueCurrentHour;
-    private Timestamp timestamp;
+    private final DeviceRepository deviceRepository;
+    private final Map<String, List<Float>> deviceMeasurementList;
+    private final WebSocketController webSocketController;
 
     @Autowired
-    public MeasurementService(MeasurementRepository measurementRepository) {
+    public MeasurementService(MeasurementRepository measurementRepository, DeviceRepository deviceRepository, WebSocketController webSocketController) {
         this.measurementRepository = measurementRepository;
-        this.noReadings = 0;
-        this.measurementValueCurrentHour = 0;
+        this.deviceRepository = deviceRepository;
+        this.deviceMeasurementList = new ConcurrentHashMap<>();
+        this.webSocketController = webSocketController;
     }
 
-    @RabbitListener(queues = "measurement")
-    public void receiveMessage(String message){
-        System.out.println(" [x] Received '" + message + "'");
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_NAME_MEASUREMENT)
+    public void receiveMessage(Map<String, Object> payload) {
 
-        noReadings++;
+        System.out.println(payload);
 
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            MeasurementDTO measurementDTO = objectMapper.readValue(message, MeasurementDTO.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        Timestamp timestamp = objectMapper.convertValue(payload.get("timestamp"), Timestamp.class);
+        UUID deviceId = objectMapper.convertValue(payload.get("deviceId"), UUID.class);
+        Float measurementValue = objectMapper.convertValue(payload.get("measurementValue"), Float.class);
 
-            deviceId = measurementDTO.getDeviceId();
-            measurementValueCurrentHour += measurementDTO.getMeasurementValue();
-            timestamp = measurementDTO.getTimestamp();
+        deviceMeasurementList.putIfAbsent(deviceId.toString(), new ArrayList<>());
+        List<Float> list = deviceMeasurementList.get(deviceId.toString());
+        synchronized (list){
+            list.add(measurementValue);
 
-            Thread.sleep(3000);
-        } catch (Exception e) {
-            System.out.println("Error processing message: " + e.getMessage());
-            e.printStackTrace();
-        }
+            if(list.size() == 6){
+                float measurementValueCurrentHour = list.stream().reduce(0.0f, Float::sum);
 
-        try {
-            if (noReadings == 6) {
                 MeasurementDTO measurementDTO = new MeasurementDTO();
                 measurementDTO.setDeviceId(deviceId);
                 measurementDTO.setMeasurementValue(measurementValueCurrentHour);
                 measurementDTO.setTimestamp(timestamp);
-                UUID insertedId = insert(measurementDTO);
-                System.out.println("Inserted ID: " + insertedId);
+                insert(measurementDTO);
 
-                measurementValueCurrentHour = 0;
-                noReadings = 0;
+                Float maxValuePerHour = deviceRepository.findDeviceById(deviceId).getMaxHourlyConsumption();
+                if(measurementValueCurrentHour > maxValuePerHour){
+                    webSocketController.sendNotification(deviceId, measurementValueCurrentHour);
+                }
+
+                list.clear();
             }
         }
-        catch(Exception e){
-            System.out.println("Error processing message: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
+
 
     public UUID insert(MeasurementDTO measurementDTO) {
         Measurement measurement = MeasurementBuilder.toEntity(measurementDTO);
@@ -84,10 +86,17 @@ public class MeasurementService {
         return measurement.getId();
     }
 
-    public List<MeasurementDTO> findMeasurementsByDeviceId(UUID deviceId) {
-        System.out.println(deviceId);
-        List<Measurement> measurementList = measurementRepository.findAllMeasurementByDeviceId(deviceId);
-        System.out.println(measurementList);
+    public List<MeasurementDTO> findMeasurementsByDeviceIdInDate(UUID deviceId, String selectedDateString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        LocalDate localDate = LocalDate.parse(selectedDateString, formatter);
+        ZoneId zoneId = ZoneId.systemDefault();
+        ZonedDateTime startOfDay = localDate.atStartOfDay(zoneId);
+        ZonedDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+
+        long startTimestamp = startOfDay.toInstant().toEpochMilli();
+        long endTimestamp = endOfDay.toInstant().toEpochMilli();
+
+        List<Measurement> measurementList = measurementRepository.findMeasurementsByDeviceIdAndTimestampBetween(deviceId, startTimestamp, endTimestamp);
         return measurementList.stream()
                 .map(MeasurementBuilder::toMeasurementDTO)
                 .collect(Collectors.toList());

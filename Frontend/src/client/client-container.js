@@ -4,10 +4,12 @@ import * as API_MEASUREMENTS from "./api/measurement-api";
 import DeviceTable from "../client/components/device-table";
 import NavigationBar from "../navigation-bar";
 import MeasurementChart from "./components/measurement-chart";
-import { Button, Card, CardHeader, CardBody, Col, Row } from 'reactstrap';
-import { Client } from '@stomp/stompjs';  // Import STOMP client
+import { Card, CardHeader, CardBody, Col, Row } from 'reactstrap';
 import SockJS from 'sockjs-client';
-import APIResponseErrorMessage from "../commons/errorhandling/api-response-error-message";  // Import SockJS for WebSocket support
+import APIResponseErrorMessage from "../commons/errorhandling/api-response-error-message";
+import * as StompJS from "@stomp/stompjs";
+import {HOST_MEASUREMENT} from "../commons/hosts";
+import CalendarComponent from "./components/calendar";
 
 class ClientContainer extends React.Component {
     constructor(props) {
@@ -16,6 +18,9 @@ class ClientContainer extends React.Component {
             deviceTableData: [],
             chartData: { labels: [], data: [] },
             isLoaded: false,
+            wsMessage: "",
+            isWsConnected: false,
+            selectedDate: null,
             errorStatus: 0,
             error: null
         };
@@ -36,42 +41,52 @@ class ClientContainer extends React.Component {
 
     componentDidMount() {
         this.fetchClientDevices();
+        this.setupWebSocket();
+    }
 
-        // const socket = new WebSocket('ws://localhost:8080/ws');
-        // socket.onopen = function(event) {
-        //     console.log("Websocket connection open");
-        // };
-        //
-        // socket.onmessage = function(event) {
-        //     console.log("Websocket connection message");
-        // };
+    setupWebSocket() {
+        const socket = new SockJS(HOST_MEASUREMENT.backend_api+'/ws');
+        const stompClient = new StompJS.Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000,
+            debug: (str) => console.log(str),
+        });
 
-        // Create a new WebSocket connection
-        const ws = new WebSocket("wss://measurementapplication.localhost/ws");
+        stompClient.onConnect = (frame) => {
+            console.log("Connected: " + frame);
 
+            stompClient.subscribe("/topic/alerts", (message) => {
+                const notification = message.body;
+                console.log("Message from server:", message.body);
 
-// Event listener for when the connection is successfully established
-        ws.onopen = () => {
-            console.log('Connected to WebSocket server');
+                this.setState({ wsMessage: message.body });
+                const deviceIdMatch = notification.match(/Device: ([0-9a-fA-F-]+)/);
 
-            // Send a message to the server
-            ws.send('Hello Server!');
+                if (deviceIdMatch) {
+                    const deviceId = deviceIdMatch[1];
+                    const deviceExists = this.state.deviceTableData.some(device => device.id === deviceId);
+
+                    if (deviceExists) {
+                        this.setState({ wsMessage: notification });
+                        alert(notification);
+                    }
+                }
+            });
+
+            this.setState({ isWsConnected: true });
         };
 
-// Event listener for when a message is received from the server
-        ws.onmessage = (event) => {
-            console.log('Received message from server:', event.data);
+        stompClient.onStompError = (frame) => {
+            console.error("Broker error: ", frame.headers['message']);
+            console.error("Details: ", frame.body);
         };
 
-// Event listener for when the connection is closed
-        ws.onclose = () => {
-            console.log('WebSocket connection closed');
+        stompClient.onDisconnect = () => {
+            console.log("Disconnected from WebSocket");
+            this.setState({ isWsConnected: false });
         };
 
-// Event listener for handling errors
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+        stompClient.activate();
     }
 
     fetchClientDevices() {
@@ -95,28 +110,42 @@ class ClientContainer extends React.Component {
     }
 
     fetchDeviceMeasurements(deviceId) {
-        API_MEASUREMENTS.getMeasurementsByDeviceId(deviceId, (result, status, err) => {
-            if (result !== null && status === 200) {
-                const timestamps = result.map(measurement => new Date(measurement.timestamp).toLocaleString());
-                const values = result.map(measurement => measurement.measurementValue);
-                console.log(timestamps);
-                console.log(values);
+        if(this.state.selectedDate === null){
+            alert("Select a date first");
+        } else{
+            API_MEASUREMENTS.getMeasurementsByDeviceIdInDate(deviceId, this.state.selectedDate, (result, status, err) => {
+                if (result !== null && status === 200) {
+                    const timestamps = result.map(measurement => new Date(measurement.timestamp).toLocaleString());
+                    const values = result.map(measurement => measurement.measurementValue);
 
-                this.setState({
-                    chartData: { labels: timestamps, data: values }
-                });
-            } else {
-                this.setState({
-                    errorStatus: status,
-                    error: err
-                });
-            }
-        });
+                    this.setState({
+                        chartData: { labels: timestamps, data: values }
+                    });
+                } else {
+                    this.setState({
+                        errorStatus: status,
+                        error: err
+                    });
+                }
+            });
+        }
     }
 
     handleDeviceClick = (device) => {
         this.fetchDeviceMeasurements(device.id);
     }
+
+    handleDateSelect = (date) => {
+        const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        };
+
+        this.setState({ selectedDate: formatDate(date) });
+    };
+
 
     render() {
         return (
@@ -150,7 +179,11 @@ class ClientContainer extends React.Component {
                     </CardBody>
                 </Card>
 
-                {/* Pass chartData state to MeasurementChart component */}
+                <CalendarComponent onDateSelect={this.handleDateSelect} />
+                {this.state.selectedDate && (
+                    <p>Selected Date: {this.state.selectedDate}</p>
+                )}
+
                 <MeasurementChart chartData={this.state.chartData} />
             </div>
         );

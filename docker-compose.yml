@@ -49,25 +49,6 @@ services:
       - "traefik.http.routers.measurementapplication.middlewares=measurementapplication-strip"
       - "traefik.http.routers.measurementapplication.service=measurementapplication"
       - "traefik.http.services.measurementapplication.loadbalancer.server.port=8080"
-      - "traefik.http.routers.measurement-ws.rule=Host(`measurementapplication.localhost`) && Path(`/ws`)"
-      - "traefik.http.routers.measurement-ws.entrypoints=wss"
-      - "traefik.http.routers.measurement-ws.service=measurement-ws"
-      - "traefik.http.services.measurement-ws.loadbalancer.server.port=8080"
-
-  # websocket:
-  #   container_name: websocket
-  #   image: websocket
-  #   user: 0:0
-  #   expose:
-  #     - "9876"  # Expose port 9876 for WebSocket
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.measurement-ws.rule=Host(`measurementapplication.localhost`) && Path(`/ws`)"
-  #     - "traefik.http.routers.measurement-ws.entrypoints=wss"
-  #     - "traefik.http.services.measurement-ws.loadbalancer.server.port=9876"  # This should match the exposed port
-  #   networks:
-  #     - shared-network
-    
 
 
 
@@ -180,11 +161,9 @@ services:
       - --accesslog.filepath=/var/log/traefik/access.log
       - --log.level=DEBUG
       - --entrypoints.web.address=:80
-      - --entrypoints.wss.address=:9876
     ports:
       - "80:80"
       - "8080:8080"
-      - "9876:9876"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
