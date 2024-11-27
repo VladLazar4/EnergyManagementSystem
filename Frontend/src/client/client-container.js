@@ -17,6 +17,7 @@ class ClientContainer extends React.Component {
         this.state = {
             deviceTableData: [],
             chartData: { labels: [], data: [] },
+            deviceName: "",
             isLoaded: false,
             wsMessage: "",
             isWsConnected: false,
@@ -55,21 +56,17 @@ class ClientContainer extends React.Component {
         stompClient.onConnect = (frame) => {
             console.log("Connected: " + frame);
 
-            stompClient.subscribe("/topic/alerts", (message) => {
-                const notification = message.body;
-                console.log("Message from server:", message.body);
+            stompClient.subscribe("/topic/alerts", (notification) => {
+                const notificationJson = JSON.parse(notification.body);
+                const deviceId = notificationJson.deviceId;
+                const value = notificationJson.value;
 
-                this.setState({ wsMessage: message.body });
-                const deviceIdMatch = notification.match(/Device: ([0-9a-fA-F-]+)/);
-
-                if (deviceIdMatch) {
-                    const deviceId = deviceIdMatch[1];
-                    const deviceExists = this.state.deviceTableData.some(device => device.id === deviceId);
-
-                    if (deviceExists) {
-                        this.setState({ wsMessage: notification });
-                        alert(notification);
-                    }
+                const device = this.state.deviceTableData.find(device => device.id === deviceId);
+                if (device) {
+                    const deviceName = device.name;
+                    const message = `Device: ${deviceName} exceeded its max value, recorded ${value}`;
+                    this.setState({ wsMessage: message });
+                    alert(message);
                 }
             });
 
@@ -132,6 +129,7 @@ class ClientContainer extends React.Component {
     }
 
     handleDeviceClick = (device) => {
+        this.setState({deviceName : device.name});
         this.fetchDeviceMeasurements(device.id);
     }
 
@@ -152,13 +150,10 @@ class ClientContainer extends React.Component {
             <div>
                 <NavigationBar />
                 <CardHeader className="text-center my-4">
-                    <strong>Client - Device Management</strong>
+                    <h3>Client - Device Management</h3>
                 </CardHeader>
 
                 <Card className="my-4">
-                    <CardHeader>
-                        <strong>Your Devices</strong>
-                    </CardHeader>
                     <CardBody>
                         <Row>
                             <Col sm="12">
@@ -179,12 +174,13 @@ class ClientContainer extends React.Component {
                     </CardBody>
                 </Card>
 
+                <MeasurementChart chartData={this.state.chartData} deviceName={this.state.deviceName} />
+
+
                 <CalendarComponent onDateSelect={this.handleDateSelect} />
                 {this.state.selectedDate && (
                     <p>Selected Date: {this.state.selectedDate}</p>
                 )}
-
-                <MeasurementChart chartData={this.state.chartData} />
             </div>
         );
     }

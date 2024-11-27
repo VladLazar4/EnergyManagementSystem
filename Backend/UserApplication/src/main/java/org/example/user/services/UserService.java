@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
+    private final String deviceUrl = "http://reverse-proxy/deviceapplication/user";
 
     @Autowired
     @Lazy
@@ -65,8 +66,6 @@ public class UserService {
 
         userDTO.setId(user.getId());
 
-        String url = "http://userapplication.localhost/device/addUser";
-
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
 
@@ -81,9 +80,10 @@ public class UserService {
         System.out.println(requestBody);
 
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+        System.out.println(deviceUrl+"/addUser");
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(deviceUrl+"/addUser", HttpMethod.POST, requestEntity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 System.out.println("User created successfully in device for user with ID: ");
@@ -108,7 +108,7 @@ public class UserService {
 
         userRepository.save(existingUser);
 
-        String url = String.format("http://userapplication.localhost/device/updateUser/%s",id);
+        String url = String.format(deviceUrl+"/updateUser/%s",id);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
@@ -147,7 +147,7 @@ public class UserService {
 
         userRepository.deleteById(userId);
 
-        String url = String.format("http://userapplication.localhost/device/deleteUser/%s",userId);
+        String url = String.format(deviceUrl+"/deleteUser/%s",userId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");

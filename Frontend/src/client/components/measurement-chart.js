@@ -2,16 +2,16 @@ import React from "react";
 import { Line } from "react-chartjs-2";
 
 
-const MeasurementChart = ({ chartData }) => {
+const MeasurementChart = ({ chartData, deviceName }) => {
     if (!chartData || chartData.labels.length === 0) {
-        return <p>No measurements available</p>;
+        return <center><h3>No measurements available</h3></center>;
     }
 
     const data = {
         labels: chartData.labels,
         datasets: [
             {
-                label: "Measurement Values",
+                label: `Measurement Values ${deviceName}`,
                 data: chartData.data,
                 borderColor: "rgb(75, 192, 192)",
                 backgroundColor: "rgba(75, 192, 192, 0.2)",
@@ -32,7 +32,7 @@ const MeasurementChart = ({ chartData }) => {
 
     return (
         <div className="chart-container">
-            <h3>Measurement Chart</h3>
+            <center><h2>Measurement Chart</h2></center>
             <Line data={data} options={options} />
         </div>
     );

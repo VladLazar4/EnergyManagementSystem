@@ -15,8 +15,8 @@ const CalendarComponent = ({onDateSelect}) => {
             <DatePicker
                 selected={selectedDate}
                 onChange={handleDateChange}
-                dateFormat="yyyy-MM-dd"
-                placeholderText="Click to select a date"
+                dateFormat="dd-MM-yyyy"
+                placeholderText="Please select the date"
             />
         </div>
     );

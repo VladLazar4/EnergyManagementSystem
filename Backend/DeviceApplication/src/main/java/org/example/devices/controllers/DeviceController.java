@@ -7,9 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.devices.dtos.DeviceDTO;
-import org.example.devices.dtos.UserDTO;
 import org.example.devices.services.DeviceService;
-import org.example.devices.services.UserService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,15 +21,13 @@ import java.util.UUID;
 @RestController
 @CrossOrigin
 @RequestMapping("/device")
-@Tag(name = "Device Controller", description = "API for managing devices and users")
+@Tag(name = "Device Controller", description = "API for managing devices")
 public class DeviceController {
     private final DeviceService deviceService;
-    private final UserService userService;
 
     @Autowired
-    public DeviceController(DeviceService deviceService, UserService userService) {
+    public DeviceController(DeviceService deviceService) {
         this.deviceService = deviceService;
-        this.userService = userService;
     }
 
     @Operation(summary = "Get all devices")
@@ -82,52 +78,6 @@ public class DeviceController {
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<JSONObject> deleteDevice(@PathVariable("id") UUID id) {
         deviceService.delete(id);
-        return ResponseEntity.ok(new JSONObject());
-    }
-
-    @Operation(summary = "Get all users")
-    @ApiResponse(responseCode = "200", description = "Successfully retrieved users",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class)))
-    @GetMapping("/getUsers")
-    public ResponseEntity<List<UserDTO>> getUsers() {
-        List<UserDTO> dtos = userService.findUsers();
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
-    }
-
-    @Operation(summary = "Add a new user")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "User created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request data")
-    })
-    @PostMapping("/addUser")
-    public ResponseEntity<?> addUser(@RequestBody(required = false) UserDTO userDTO) {
-        if (userDTO == null) {
-            return ResponseEntity.badRequest().body("User data is required");
-        }
-
-        UUID userId = userService.insert(userDTO);
-        return new ResponseEntity<>(userId, HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "Update an existing user")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User updated successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found")
-    })
-    @PutMapping(value = "/updateUser/{id}")
-    public ResponseEntity<JSONObject> updateUser(@PathVariable("id") UUID id, @Valid @RequestBody UserDTO userDTO) {
-        userService.update(id, userDTO);
-        return ResponseEntity.ok(new JSONObject());
-    }
-
-    @Operation(summary = "Delete a user")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found")
-    })
-    @DeleteMapping(value = "/deleteUser/{id}")
-    public ResponseEntity<JSONObject> deleteUser(@PathVariable("id") UUID id) {
-        userService.delete(id);
         return ResponseEntity.ok(new JSONObject());
     }
 }

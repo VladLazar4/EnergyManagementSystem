@@ -1,8 +1,11 @@
-package org.example.measurement.confuguration;
+package org.example.measurement.controllers;
 
+import org.json.JSONObject;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Controller
@@ -15,7 +18,9 @@ public class WebSocketController {
     }
 
     public void sendNotification(UUID deviceId, Float measurementValue) {
-        String notification = "Device: " + deviceId + " exceeded the limit! Value: " + measurementValue;
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("deviceId", deviceId);
+        notification.put("value", measurementValue);
         messagingTemplate.convertAndSend("/topic/alerts", notification);
     }
 }

@@ -3,7 +3,7 @@ package org.example.measurement.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Table;
 import org.example.measurement.confuguration.RabbitMQConfig;
-import org.example.measurement.confuguration.WebSocketController;
+import org.example.measurement.controllers.WebSocketController;
 import org.example.measurement.dtos.MeasurementDTO;
 import org.example.measurement.dtos.builders.MeasurementBuilder;
 import org.example.measurement.entities.Measurement;

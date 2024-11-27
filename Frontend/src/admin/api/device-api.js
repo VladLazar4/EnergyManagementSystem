@@ -66,7 +66,7 @@ function deleteDevice(deviceId, callback){
 }
 
 function getUsers(callback) {
-    let request = new Request(HOST_DEVICE.backend_api + endpoint.device + "/getUsers", {
+    let request = new Request(HOST_DEVICE.backend_api + endpoint.user + "/getUsers", {
         method: 'GET',
     });
     console.log(request.url);

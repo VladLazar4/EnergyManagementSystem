@@ -144,8 +144,8 @@ class AdministratorContainer extends React.Component {
         return (
             <div>
                 <NavigationBar />
-                <CardHeader className="text-center my-4">
-                    <strong>Administrator - User and Device Management</strong>
+                <h3 className="text-center my-4">
+                    <h3><strong>Administrator - User and Device Management</strong></h3>
                 </CardHeader>
 
                 <Card>
@@ -189,7 +189,6 @@ class AdministratorContainer extends React.Component {
                     </CardBody>
                 </Card>
 
-                {/* User Modal */}
                 <Modal isOpen={this.state.selectedUser} toggle={this.toggleUserForm} size="lg">
                     <ModalHeader toggle={this.toggleUserForm}> {selectedRow ? 'Edit User' : 'Add User'} </ModalHeader>
                     <ModalBody>
@@ -202,7 +201,6 @@ class AdministratorContainer extends React.Component {
                     </ModalBody>
                 </Modal>
 
-                {/* Device Modal */}
                 <Modal isOpen={this.state.selectedDevice} toggle={this.toggleDeviceForm} size="lg">
                     <ModalHeader toggle={this.toggleDeviceForm}> {selectedRow ? 'Edit Device' : 'Add Device'} </ModalHeader>
                     <ModalBody>

@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.util.UUID;
 
@@ -18,10 +19,10 @@ import java.util.UUID;
         })
 public class User {
     @Id
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Column(name = "id", nullable = false)
     private UUID id;
-
 
     @Column(name = "username", nullable = false)
     private String username;

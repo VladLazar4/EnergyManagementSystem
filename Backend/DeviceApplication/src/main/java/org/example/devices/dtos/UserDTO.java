@@ -1,12 +1,16 @@
 package org.example.devices.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 import org.example.devices.entities.Roles;
 import org.springframework.hateoas.RepresentationModel;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@Getter
+@Setter
 public class UserDTO extends RepresentationModel<UserDTO> {
     @JsonProperty("id")
     private UUID id;
@@ -31,46 +35,6 @@ public class UserDTO extends RepresentationModel<UserDTO> {
         this.role = role;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Roles getRole() {
-        return role;
-    }
-
-    public void setRole(Roles role) {
-        this.role = role;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -83,5 +47,16 @@ public class UserDTO extends RepresentationModel<UserDTO> {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), id, name, role);
+    }
+
+    @Override
+    public String toString() {
+        return "UserDTO{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", name='" + name + '\'' +
+                ", role=" + role +
+                '}';
     }
 }
