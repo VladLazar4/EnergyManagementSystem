@@ -17,9 +17,10 @@ public class WebSocketController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void sendNotification(UUID deviceId, Float measurementValue) {
+    public void sendNotification(UUID deviceId, UUID ownerId, Float measurementValue) {
         Map<String, Object> notification = new HashMap<>();
         notification.put("deviceId", deviceId);
+        notification.put("ownerId", ownerId);
         notification.put("value", measurementValue);
         messagingTemplate.convertAndSend("/topic/alerts", notification);
     }

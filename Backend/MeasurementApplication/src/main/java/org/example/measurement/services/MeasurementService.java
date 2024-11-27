@@ -2,10 +2,11 @@ package org.example.measurement.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Table;
-import org.example.measurement.confuguration.RabbitMQConfig;
+import org.example.measurement.confugurations.RabbitMQConfig;
 import org.example.measurement.controllers.WebSocketController;
 import org.example.measurement.dtos.MeasurementDTO;
 import org.example.measurement.dtos.builders.MeasurementBuilder;
+import org.example.measurement.entities.Device;
 import org.example.measurement.entities.Measurement;
 import org.example.measurement.repositories.DeviceRepository;
 import org.example.measurement.repositories.MeasurementRepository;
@@ -46,8 +47,6 @@ public class MeasurementService {
     @RabbitListener(queues = RabbitMQConfig.QUEUE_NAME_MEASUREMENT)
     public void receiveMessage(Map<String, Object> payload) {
 
-        System.out.println(payload);
-
         ObjectMapper objectMapper = new ObjectMapper();
         Timestamp timestamp = objectMapper.convertValue(payload.get("timestamp"), Timestamp.class);
         UUID deviceId = objectMapper.convertValue(payload.get("deviceId"), UUID.class);
@@ -67,9 +66,12 @@ public class MeasurementService {
                 measurementDTO.setTimestamp(timestamp);
                 insert(measurementDTO);
 
-                Float maxValuePerHour = deviceRepository.findDeviceById(deviceId).getMaxHourlyConsumption();
+                Device device = deviceRepository.findDeviceById(deviceId);
+
+                Float maxValuePerHour = device.getMaxHourlyConsumption();
+                UUID ownerId = device.getOwnerId();
                 if(measurementValueCurrentHour > maxValuePerHour){
-                    webSocketController.sendNotification(deviceId, measurementValueCurrentHour);
+                    webSocketController.sendNotification(deviceId, ownerId, measurementValueCurrentHour);
                 }
 
                 list.clear();
@@ -98,6 +100,7 @@ public class MeasurementService {
 
         List<Measurement> measurementList = measurementRepository.findMeasurementsByDeviceIdAndTimestampBetween(deviceId, startTimestamp, endTimestamp);
         return measurementList.stream()
+                .sorted(Comparator.comparing(Measurement::getTimestamp))
                 .map(MeasurementBuilder::toMeasurementDTO)
                 .collect(Collectors.toList());
     }

@@ -59,10 +59,15 @@ class ClientContainer extends React.Component {
             stompClient.subscribe("/topic/alerts", (notification) => {
                 const notificationJson = JSON.parse(notification.body);
                 const deviceId = notificationJson.deviceId;
+                const ownerId = notificationJson.ownerId;
                 const value = notificationJson.value;
 
-                const device = this.state.deviceTableData.find(device => device.id === deviceId);
-                if (device) {
+                const personData = sessionStorage.getItem("person");
+                const person = JSON.parse(personData);
+                const clientId = person.id;
+
+                if(clientId === ownerId){
+                    const device = this.state.deviceTableData.find(device => device.id === deviceId);
                     const deviceName = device.name;
                     const message = `Device: ${deviceName} exceeded its max value, recorded ${value}`;
                     this.setState({ wsMessage: message });

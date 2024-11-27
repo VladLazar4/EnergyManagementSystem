@@ -1,4 +1,4 @@
-package org.example.measurement.confuguration;
+package org.example.measurement.confugurations;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

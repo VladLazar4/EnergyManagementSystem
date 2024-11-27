@@ -1,12 +1,9 @@
 package org.example.measurement.services;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Table;
-import org.example.measurement.confuguration.RabbitMQConfig;
+import org.example.measurement.confugurations.RabbitMQConfig;
 import org.example.measurement.dtos.DeviceDTO;
-import org.example.measurement.dtos.MeasurementDTO;
-import org.example.measurement.dtos.MessageDTO;
 import org.example.measurement.dtos.builders.DeviceBuilder;
 import org.example.measurement.entities.Device;
 import org.example.measurement.repositories.DeviceRepository;

@@ -144,7 +144,7 @@ class AdministratorContainer extends React.Component {
         return (
             <div>
                 <NavigationBar />
-                <h3 className="text-center my-4">
+                <CardHeader className="text-center my-4">
                     <h3><strong>Administrator - User and Device Management</strong></h3>
                 </CardHeader>
 
