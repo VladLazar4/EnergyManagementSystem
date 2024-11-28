@@ -116,8 +116,7 @@ services:
       - "traefik.http.routers.postgres_measurement.middlewares=postgres_measurement-strip "
       - "traefik.http.routers.postgres_measurement.service=postgres_measurement"
       - "traefik.http.services.postgres_measurement.loadbalancer.server.port=8080"
-
-
+      
 
 
   frontendapplication:
