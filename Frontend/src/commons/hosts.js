@@ -1,16 +1,20 @@
 export const HOST_USER = {
     // backend_api: 'http://reverse-proxy/userapplication',
-    backend_api: 'http://userapplication.localhost',
+    backend_api: 'https://userapplication.localhost',
 };
 
 export const HOST_DEVICE = {
-    backend_api: 'http://deviceapplication.localhost',
+    backend_api: 'https://deviceapplication.localhost',
     // backend_api: 'http://reverse-proxy/deviceapplication',
 };
 
 export const HOST_MEASUREMENT = {
-    backend_api: 'http://measurementapplication.localhost',
+    backend_api: 'https://measurementapplication.localhost',
     // backend_api: 'http://reverse-proxy/measurementapplication',
+};
+
+export const HOST_CHAT = {
+    backend_api: 'https://chatapplication.localhost',
 };
 // export const HOST_USER = process.env.REACT_APP_USER_API_URL;
 // export const HOST_DEVICE = process.env.REACT_APP_DEVICE_API_URL;

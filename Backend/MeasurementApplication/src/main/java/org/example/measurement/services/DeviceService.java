@@ -2,7 +2,7 @@ package org.example.measurement.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Table;
-import org.example.measurement.confugurations.RabbitMQConfig;
+import org.example.measurement.configurations.RabbitMQConfig;
 import org.example.measurement.dtos.DeviceDTO;
 import org.example.measurement.dtos.builders.DeviceBuilder;
 import org.example.measurement.entities.Device;

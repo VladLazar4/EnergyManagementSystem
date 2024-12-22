@@ -2,7 +2,7 @@ package org.example.measurement.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Table;
-import org.example.measurement.confugurations.RabbitMQConfig;
+import org.example.measurement.configurations.RabbitMQConfig;
 import org.example.measurement.controllers.WebSocketController;
 import org.example.measurement.dtos.MeasurementDTO;
 import org.example.measurement.dtos.builders.MeasurementBuilder;
@@ -52,6 +52,8 @@ public class MeasurementService {
         UUID deviceId = objectMapper.convertValue(payload.get("deviceId"), UUID.class);
         Float measurementValue = objectMapper.convertValue(payload.get("measurementValue"), Float.class);
 
+        System.out.println(timestamp.toString());
+
         deviceMeasurementList.putIfAbsent(deviceId.toString(), new ArrayList<>());
         List<Float> list = deviceMeasurementList.get(deviceId.toString());
         synchronized (list){
@@ -59,6 +61,7 @@ public class MeasurementService {
 
             if(list.size() == 6){
                 float measurementValueCurrentHour = list.stream().reduce(0.0f, Float::sum);
+                list.clear();
 
                 MeasurementDTO measurementDTO = new MeasurementDTO();
                 measurementDTO.setDeviceId(deviceId);
@@ -68,13 +71,15 @@ public class MeasurementService {
 
                 Device device = deviceRepository.findDeviceById(deviceId);
 
-                Float maxValuePerHour = device.getMaxHourlyConsumption();
-                UUID ownerId = device.getOwnerId();
-                if(measurementValueCurrentHour > maxValuePerHour){
-                    webSocketController.sendNotification(deviceId, ownerId, measurementValueCurrentHour);
+                try {
+                    Float maxValuePerHour = device.getMaxHourlyConsumption();
+                    UUID ownerId = device.getOwnerId();
+                    if (measurementValueCurrentHour > maxValuePerHour) {
+                        webSocketController.sendNotification(deviceId, ownerId, measurementValueCurrentHour);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
-                list.clear();
             }
         }
     }

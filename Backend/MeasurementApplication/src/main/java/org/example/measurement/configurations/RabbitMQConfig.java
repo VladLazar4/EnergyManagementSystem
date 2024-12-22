@@ -1,4 +1,4 @@
-package org.example.measurement.confugurations;
+package org.example.measurement.configurations;
 
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.core.Queue;

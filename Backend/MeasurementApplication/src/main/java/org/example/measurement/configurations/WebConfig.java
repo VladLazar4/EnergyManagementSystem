@@ -1,4 +1,4 @@
-package org.example.measurement.confugurations;
+package org.example.measurement.configurations;
 
 import org.springframework.context.annotation.Configuration;
 //import org.springframework.web.reactive.function.client.WebClient;
@@ -10,7 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://frontendapplication.localhost")
+                .allowedOrigins("https://frontendapplication.localhost")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
     }

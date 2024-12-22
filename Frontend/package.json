@@ -9,6 +9,8 @@
     "chart.js": "^2.9.3",
     "crypto-js": "^4.2.0",
     "date-fns": "^2.29.2",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "moment": "^2.23.0",
     "prop-types": "^15.6.2",
     "randomcolor": "^0.5.4",

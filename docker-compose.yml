@@ -10,12 +10,15 @@ services:
       - shared-network
     depends_on:
       - postgres_user
+    volumes:
+      - ./certs:/certs:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.userapplication.rule=Host(`userapplication.localhost`)  || PathPrefix(`/userapplication`)"
       - "traefik.http.middlewares.userapplication-strip.stripprefix.prefixes=/userapplication"
       - "traefik.http.routers.userapplication.middlewares=userapplication-strip "
-      - "traefik.http.routers.userapplication.service=userapplication"
+      - "traefik.http.routers.userapplication.entryPoints=websecure"
+      - "traefik.http.routers.userapplication.tls=true"
       - "traefik.http.services.userapplication.loadbalancer.server.port=8080"
 
   deviceapplication:
@@ -26,12 +29,15 @@ services:
       - shared-network
     depends_on:
       - postgres_device
+    volumes:
+      - ./certs:/certs:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.deviceapplication.rule=Host(`deviceapplication.localhost`) || PathPrefix(`/deviceapplication`)"
       - "traefik.http.middlewares.deviceapplication-strip.stripprefix.prefixes=/deviceapplication"
       - "traefik.http.routers.deviceapplication.middlewares=deviceapplication-strip "
-      - "traefik.http.routers.deviceapplication.service=deviceapplication"
+      - "traefik.http.routers.deviceapplication.entryPoints=websecure"
+      - "traefik.http.routers.deviceapplication.tls=true"
       - "traefik.http.services.deviceapplication.loadbalancer.server.port=8080"
 
   measurementapplication:
@@ -42,13 +48,35 @@ services:
       - shared-network
     depends_on:
       - postgres_measurement
+    volumes:
+      - ./certs:/certs:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.measurementapplication.rule=Host(`measurementapplication.localhost`) || PathPrefix(`/measurementapplication`)"
       - "traefik.http.middlewares.measurementapplication-strip.stripprefix.prefixes=/measurementapplication"
       - "traefik.http.routers.measurementapplication.middlewares=measurementapplication-strip"
-      - "traefik.http.routers.measurementapplication.service=measurementapplication"
+      - "traefik.http.routers.measurementapplication.entryPoints=websecure"
+      - "traefik.http.routers.measurementapplication.tls=true"
       - "traefik.http.services.measurementapplication.loadbalancer.server.port=8080"
+
+  chatapplication:
+    build: Backend/ChatApplication/
+    deploy:
+      replicas: 1
+    networks:
+      - shared-network
+    depends_on:
+      - postgres_chat
+    volumes:
+      - ./certs:/certs:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chatapplication.rule=Host(`chatapplication.localhost`) || PathPrefix(`/chatapplication`)"
+      - "traefik.http.middlewares.chatapplication-strip.stripprefix.prefixes=/chatapplication"
+      - "traefik.http.routers.chatapplication.middlewares=chatapplication-strip"
+      - "traefik.http.routers.chatapplication.entryPoints=websecure"
+      - "traefik.http.routers.chatapplication.tls=true"
+      - "traefik.http.services.chatapplication.loadbalancer.server.port=8080"
 
 
 
@@ -57,13 +85,13 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: assignment2_user
+      POSTGRES_DB: assignment3_user
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
     networks:
       - shared-network
     volumes:
-      - C:\volumes\sd\postgres\assignment2_user:/var/lib/postgresql/data/
+      - C:\volumes\sd\postgres\assignment3_user:/var/lib/postgresql/data/
     ports:
       - "1234:5432"
     labels:
@@ -72,19 +100,19 @@ services:
       - "traefik.http.middlewares.postgres_user-strip.stripprefix.prefixes=/postgres_user"
       - "traefik.http.routers.postgres_user.middlewares=postgres_user-strip "
       - "traefik.http.routers.postgres_user.service=postgres_user"
-      - "traefik.http.services.postgres_user.loadbalancer.server.port=8080"
+      - "traefik.http.services.postgres_user.loadbalancer.server.port=5432"
 
   postgres_device:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: assignment2_device
+      POSTGRES_DB: assignment3_device
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
     networks:
       - shared-network
     volumes:
-      - C:\volumes\sd\postgres\assignment2_device:/var/lib/postgresql/data/
+      - C:\volumes\sd\postgres\assignment3_device:/var/lib/postgresql/data/
     ports:
       - "1235:5432"
     labels:
@@ -93,20 +121,20 @@ services:
       - "traefik.http.middlewares.postgres_device-strip.stripprefix.prefixes=/postgres_device"
       - "traefik.http.routers.postgres_device.middlewares=postgres_device-strip "
       - "traefik.http.routers.postgres_device.service=postgres_device"
-      - "traefik.http.services.postgres_device.loadbalancer.server.port=8080"
+      - "traefik.http.services.postgres_device.loadbalancer.server.port=5432"
 
 
   postgres_measurement:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: assignment2_measurement
+      POSTGRES_DB: assignment3_measurement
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
     networks:
       - shared-network
     volumes:
-      - C:\volumes\sd\postgres\assignment2_measurement:/var/lib/postgresql/data/
+      - C:\volumes\sd\postgres\assignment3_measurement:/var/lib/postgresql/data/
     ports:
       - "1236:5432"
     labels:
@@ -115,7 +143,28 @@ services:
       - "traefik.http.middlewares.postgres_measurement-strip.stripprefix.prefixes=/postgres_measurement"
       - "traefik.http.routers.postgres_measurement.middlewares=postgres_measurement-strip "
       - "traefik.http.routers.postgres_measurement.service=postgres_measurement"
-      - "traefik.http.services.postgres_measurement.loadbalancer.server.port=8080"
+      - "traefik.http.services.postgres_measurement.loadbalancer.server.port=5432"
+
+  postgres_chat:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: assignment3_chat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    networks:
+      - shared-network
+    volumes:
+      - C:\volumes\sd\postgres\assignment3_chat:/var/lib/postgresql/data/
+    ports:
+      - "1237:5432"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.postgres_chat.rule=Host(`postgres_chat.localhost`) || PathPrefix(`/postgres_chat`)"
+      - "traefik.http.middlewares.postgres_chat-strip.stripprefix.prefixes=/postgres_chat"
+      - "traefik.http.routers.postgres_chat.middlewares=postgres_chat-strip "
+      - "traefik.http.routers.postgres_chat.service=postgres_chat"
+      - "traefik.http.services.postgres_chat.loadbalancer.server.port=5432"
       
 
 
@@ -123,16 +172,21 @@ services:
     build:
       context: Frontend/
       args:
-        USER_ENV: http://userapplication.localhost
-        DEVICE_ENV: http://deviceapplication.localhost
-        MEASUREMENT_ENV: http://measurementapplication.localhost
+        USER_ENV: https://userapplication.localhost
+        DEVICE_ENV: https://deviceapplication.localhost
+        MEASUREMENT_ENV: https://measurementapplication.localhost
+        CHAT_ENV: https://chatapplication.localhost
     volumes:
       - C:\volumes\sd\frontend\frontendapplication:/var/lib/frontend/data/
     networks:
       - shared-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontendapplication.rule=Host(`frontendapplication.localhost`)"
+      - "traefik.http.routers.frontendapplication.rule=Host(`frontendapplication.localhost`) || PathPrefix(`/frontendapplication`)"
+      - "traefik.http.middlewares.frontendapplication-strip.stripprefix.prefixes=/frontendapplication"
+      - "traefik.http.routers.frontendapplication.middlewares=frontendapplication-strip"
+      - "traefik.http.routers.frontendapplication.entryPoints=websecure"
+      - "traefik.http.routers.frontendapplication.tls=true"
       - "traefik.http.services.frontendapplication.loadbalancer.server.port=8080"
 
 
@@ -150,23 +204,31 @@ services:
       - shared-network
   
 
-
   reverse-proxy:
     image: traefik:v3.2
     command:
       - --api.insecure=true
       - --providers.docker
+      - --providers.file.directory=/etc/traefik/dynamic
       - --accesslog=true
       - --accesslog.filepath=/var/log/traefik/access.log
       - --log.level=DEBUG
       - --entrypoints.web.address=:80
+      - --entrypoints.traefik.address=:8080
+      - --entrypoints.websecure.address=:443
+      - --providers.file.directory=/etc/traefik/dynamic
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./dynamic:/etc/traefik/dynamic
+      - ./certs:/certs:ro
     networks:
       - shared-network
+
+
 
 
 networks:

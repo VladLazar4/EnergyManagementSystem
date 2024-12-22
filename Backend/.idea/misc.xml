@@ -7,6 +7,7 @@
         <option value="$PROJECT_DIR$/UserApplication/pom.xml" />
         <option value="$PROJECT_DIR$/DeviceApplication/pom.xml" />
         <option value="$PROJECT_DIR$/MeasurementApplication/pom.xml" />
+        <option value="$PROJECT_DIR$/ChatApplication/pom.xml" />
       </list>
     </option>
   </component>

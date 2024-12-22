@@ -1,5 +1,6 @@
 import React from 'react';
-import CryptoJS from "crypto-js";
+import * as VERIFY_JWT from '../check-jwt'
+// import { decode as jwtDecode } from 'jwt-decode';
 import BackgroundImg from '../commons/images/background.jpg';
 import { Button, Container, Jumbotron, Form, FormGroup, Label, Input } from 'reactstrap';
 import * as API_LOGIN from './login-api';
@@ -40,11 +41,29 @@ class Login extends React.Component {
         sessionStorage.clear();
 
         API_LOGIN.loginUser({ username, password }, (result, status, err) => {
+            console.log(result);
             if (result && status===200) {
-                sessionStorage.setItem("person", JSON.stringify(result));
-                if (result.role === "admin") {
+
+                // let decoded = VERIFY_JWT.verifyJwt(result.accessToken);
+                // console.log("...........................");
+                // console.log(decoded);
+
+                sessionStorage.setItem("jwtToken", result.accessToken);
+
+                const base64Payload = result.accessToken.split('.')[1];
+                const decodedPayload = JSON.parse(atob(base64Payload));
+
+                const person = {
+                    userId: decodedPayload.userId,
+                    role: decodedPayload.userRole,
+                    username: decodedPayload.sub
+                };
+
+                sessionStorage.setItem("person", JSON.stringify(person));
+
+                if (person.role === "admin") {
                     window.location.href = "/user/admin";
-                } else if (result.role === "client") {
+                } else if (person.role === "client") {
                     window.location.href = "/user/client";
                 }
             } else {

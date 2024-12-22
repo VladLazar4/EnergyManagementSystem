@@ -21,7 +21,8 @@ function loginUser(params, callback){
         headers: {
             'Content-Type': 'application/json',
         },
-        body: requestBody
+        body: requestBody,
+        credentials: 'include'
     });
     console.log("URL: " + request.url);
     console.log("hashedPassword: " + hashedPassword);

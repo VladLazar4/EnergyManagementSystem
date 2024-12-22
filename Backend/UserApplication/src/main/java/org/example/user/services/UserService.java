@@ -12,6 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.*;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -24,10 +28,10 @@ import java.util.stream.Collectors;
 
 @Service
 @Table(name = "users")
-public class UserService {
+public class UserService implements UserDetailsService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
-    private final String deviceUrl = "http://reverse-proxy/deviceapplication/user";
+    private final String deviceUrl = "https://reverse-proxy/deviceapplication/user";
 
     @Autowired
     @Lazy
@@ -40,7 +44,7 @@ public class UserService {
     public UserService(UserRepository userRepository, RestTemplate restTemplate, WebClient.Builder webClientBuilder) {
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
-        this.webClient = webClientBuilder.baseUrl("http://userapplication.localhost").build();
+        this.webClient = webClientBuilder.baseUrl("https://userapplication.localhost").build();
     }
 
     public List<UserDTO> findUsers() {
@@ -171,8 +175,6 @@ public class UserService {
     }
 
     public UserDTO loginUser(String username, String hashedPassword) {
-        System.out.println(username);
-        System.out.println(hashedPassword);
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (!userOptional.isPresent()) {
             LOGGER.error("User with name {} was not found in db", username);
@@ -188,6 +190,18 @@ public class UserService {
 
         }
         return UserBuilder.toUserDTO(userOptional.get());
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .map(user -> new org.springframework.security.core.userdetails.User(
+                        user.getUsername(),
+                        user.getPassword(),
+                        true, true, true, true,
+                        Collections.singleton(new SimpleGrantedAuthority(user.getRole().toString()))
+                ))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
 
     private static String hashPassword(String password) {

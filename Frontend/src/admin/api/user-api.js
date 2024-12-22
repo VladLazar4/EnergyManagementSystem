@@ -6,17 +6,26 @@ const endpoint = {
     device: '/device'
 };
 
+const token = sessionStorage.getItem('jwtToken');
+
+
 function getUsers(callback) {
-    let request = new Request(HOST_USER.backend_api + endpoint.user, {
+    let request = new Request(HOST_USER.backend_api + endpoint.user + "/getUsers", {
         method: 'GET',
+        headers : {
+            'Authorization': 'Bearer ' + token
+        }
     });
     console.log(request.url);
     RestApiClient.performRequest(request, callback);
 }
 
 function getUserById(params, callback){
-    let request = new Request(HOST_USER.backend_api + endpoint.user + params.id, {
-       method: 'GET'
+    let request = new Request(HOST_USER.backend_api + endpoint.user + "/" + params, {
+        method: 'GET',
+        headers : {
+            'Authorization': 'Bearer ' + token
+        }
     });
 
     console.log(request.url);
@@ -29,6 +38,7 @@ function postUser(user, callback){
         headers : {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify(user)
     });
@@ -76,6 +86,7 @@ function updateUser(userId, userData, callback) {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify(userData),
     });
@@ -124,6 +135,7 @@ function deleteUser(userId, callback) {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
         },
     });
 

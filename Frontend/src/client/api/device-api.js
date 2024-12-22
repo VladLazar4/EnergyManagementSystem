@@ -5,12 +5,15 @@ const endpoint = {
     device: '/device'
 };
 
+const token = sessionStorage.getItem('jwtToken');
+
 function getDeviceById(params, callback){
     const ownerId = params.ownerId;
     let request = new Request(`${HOST_DEVICE.backend_api}${endpoint.device}/${ownerId}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
+            'Authorization': 'Bearer ' + token
         }
     });
 
@@ -24,6 +27,7 @@ function postDevice(user, callback){
         headers : {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify(user)
     });

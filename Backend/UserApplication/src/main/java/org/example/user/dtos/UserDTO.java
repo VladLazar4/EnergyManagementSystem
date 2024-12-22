@@ -1,8 +1,6 @@
 package org.example.user.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-//import lombok.Builder;
-//import lombok.Data;
 import org.example.user.entities.Roles;
 import org.springframework.hateoas.RepresentationModel;
 

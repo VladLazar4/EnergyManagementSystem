@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import org.example.user.configurations.JwtUtil;
 import org.example.user.dtos.UserDTO;
 import org.example.user.services.UserService;
 import org.json.JSONObject;
@@ -16,7 +18,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.validation.Valid;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.*;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -24,20 +30,19 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @CrossOrigin
+@AllArgsConstructor
 @RequestMapping("/user")
 @Tag(name = "User Controller", description = "API for managing users")
 public class UserController {
     private final UserService userService;
 
-    @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+    private static final String SECRET_KEY = "your-secret-key6";
+    private final Key jwtSigningKey;
 
     @Operation(summary = "Get all users")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved users",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class)))
-    @GetMapping()
+    @GetMapping("/getUsers")
     public ResponseEntity<List<UserDTO>> getUsers() {
         List<UserDTO> dtos = userService.findUsers();
         for (UserDTO dto : dtos) {
@@ -99,7 +104,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
     @PostMapping("/login")
-    public ResponseEntity<UserDTO> loginUser(@Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<?> loginUser(@Valid @RequestBody UserDTO userDTO) {
         String username = userDTO.getUsername();
         String hashedPassword = userDTO.getPassword();
 
@@ -107,26 +112,42 @@ public class UserController {
         try {
             authenticatedUser = userService.loginUser(username, hashedPassword);
         } catch (ResourceNotFoundException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", "Invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
         if (authenticatedUser != null) {
+            Map<String, Object> claims = Map.of(
+                    "userRole", authenticatedUser.getRole(),
+                    "userId", authenticatedUser.getId()
+            );
+
+            String accessToken = JwtUtil.generateAccessToken(
+                    authenticatedUser.getUsername(),
+                    claims,
+                    900000,
+                    jwtSigningKey
+            );
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Login successful");
-            response.put("user", authenticatedUser.getUsername());
-            response.put("userRole", authenticatedUser.getRole());
-            response.put("id", authenticatedUser.getId());
-            return new ResponseEntity<>(authenticatedUser, HttpStatus.OK);
+            response.put("accessToken", accessToken);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", "Invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
+
+    public static String decrypt(String encryptedPassword) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(SECRET_KEY.getBytes("UTF-8"), "AES");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+
+        byte[] decodedValue = Base64.getDecoder().decode(encryptedPassword);
+        byte[] decryptedValue = cipher.doFinal(decodedValue);
+        return new String(decryptedValue, StandardCharsets.UTF_8);
+    }
+
+
+
 }
 
