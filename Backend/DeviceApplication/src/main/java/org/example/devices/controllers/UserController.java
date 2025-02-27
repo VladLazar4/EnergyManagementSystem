@@ -49,6 +49,7 @@ public class UserController {
     public ResponseEntity<?> addUser(@Valid @RequestBody UserDTO userDTO) {
         System.out.println(userDTO.toString());
         UUID userId = userService.insert(userDTO);
+        System.out.println(userId.toString());
         return new ResponseEntity<>(userId, HttpStatus.CREATED);
     }
 

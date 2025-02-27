@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -70,8 +72,11 @@ public class UserService implements UserDetailsService {
 
         userDTO.setId(user.getId());
 
-        HttpHeaders headers = new HttpHeaders();
+        /*HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
+        String jwtToken = getJwtFromSecurityContext();
+        System.out.println(jwtToken);
+        headers.set("Authorization", "Bearer "+jwtToken);
 
         String requestBody = String.format(
                 "{\"id\":\"%s\", \"username\": \"%s\", \"password\": \"%s\", \"name\": \"%s\", \"role\": \"%s\"}",
@@ -96,7 +101,7 @@ public class UserService implements UserDetailsService {
             }
         } catch (Exception e) {
             throw new RuntimeException("Error while creating user in device for user", e);
-        }
+        }*/
         return user.getId();
     }
 
@@ -112,10 +117,13 @@ public class UserService implements UserDetailsService {
 
         userRepository.save(existingUser);
 
-        String url = String.format(deviceUrl+"/updateUser/%s",id);
+        /*String url = String.format(deviceUrl+"/updateUser/%s",id);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
+        String jwtToken = getJwtFromSecurityContext();
+        headers.set("Authorization", "Bearer "+jwtToken);
+
 
         String requestBody = String.format(
                 "{\"id\":\"%s\", \"username\": \"%s\", \"password\": \"%s\", \"name\": \"%s\", \"role\": \"%s\"}",
@@ -139,7 +147,7 @@ public class UserService implements UserDetailsService {
             }
         } catch (Exception e) {
             throw new RuntimeException("Error while updating user in device for user", e);
-        }
+        }*/
         return existingUser.getId();
     }
 
@@ -151,10 +159,12 @@ public class UserService implements UserDetailsService {
 
         userRepository.deleteById(userId);
 
-        String url = String.format(deviceUrl+"/deleteUser/%s",userId);
+        /*String url = String.format(deviceUrl+"/deleteUser/%s",userId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
+        String jwtToken = getJwtFromSecurityContext();
+        headers.set("Authorization", "Bearer "+jwtToken);
 
         String requestBody = String.format("{\"id\":\"%s\"}", userId);
         System.out.println(requestBody);
@@ -171,7 +181,7 @@ public class UserService implements UserDetailsService {
             }
         } catch (Exception e) {
             throw new RuntimeException("Error while deleting user in device for user", e);
-        }
+        }*/
     }
 
     public UserDTO loginUser(String username, String hashedPassword) {
@@ -220,5 +230,13 @@ public class UserService implements UserDetailsService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getJwtFromSecurityContext() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getCredentials() instanceof String) {
+            return (String) authentication.getCredentials(); // Token is stored as credentials
+        }
+        throw new RuntimeException("JWT Token not found in Security Context");
     }
 }
